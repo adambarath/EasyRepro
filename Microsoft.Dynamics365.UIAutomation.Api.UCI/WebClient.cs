@@ -1302,7 +1302,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 {
                     ribbon = driver.WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.CommandBar.Container]));
                 }
-                
+
 
                 if (ribbon == null)
                 {
@@ -1310,7 +1310,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                         TimeSpan.FromSeconds(5),
                         "Unable to find the ribbon.");
                 }
-                
+
                 //Is the button in the ribbon?
                 if (ribbon.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridCommandLabel].Replace("[NAME]", name)), out var command))
                 {
@@ -1465,7 +1465,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 return gridContainer.GetAttribute("innerHTML");
             });
         }
-        
+
         public BrowserCommandResult<Dictionary<string, IWebElement>> OpenViewPicker(int thinkTime = Constants.DefaultThinkTime)
         {
             ThinkTime(thinkTime);
@@ -1511,6 +1511,8 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 var key = viewName.ToLowerString();
                 bool success = views.TryGetValue(key, out var view);
                 if (!success)
+                    success = views.TryGetValue($"{key}default", out view);
+                if (!success)
                     throw new InvalidOperationException($"No view with the name '{key}' exists.");
 
                 view.Click(true);
@@ -1527,9 +1529,10 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
         }
         private static int ClickGridAndPageDown(IWebDriver driver, IWebElement grid, int lastKnownFloor)
         {
-            Actions actions = new Actions(driver);
-            var CurrentRows = driver.FindElements(By.XPath(AppElements.Xpath[AppReference.Grid.Rows]));
-            var lastFloor = CurrentRows.Where(x => Convert.ToInt32(x.GetAttribute("row-index")) == lastKnownFloor).First();
+            var actions = new Actions(driver);
+
+            var currentRows = driver.FindElements(By.XPath(AppElements.Xpath[AppReference.Grid.Rows]));
+            var lastFloor = currentRows.Where(x => Convert.ToInt32(x.GetAttribute("row-index")) == lastKnownFloor).First();
             var topRow = driver.FindElement(By.XPath(AppElements.Xpath[AppReference.Grid.Rows]));
             var firstCell = lastFloor.FindElement(By.XPath("//div[@aria-colindex='1']"));
             lastFloor.Click();
@@ -1548,17 +1551,19 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 int lastRowInCurrentView = 0;
                 while (!lastRow)
                 {
-                    if (!driver.HasElement(By.XPath(AppElements.Xpath[AppReference.Grid.Row].Replace("[INDEX]", (index).ToString()))))
+                    var rowXPath = AppElements.Xpath[AppReference.Grid.Row];
+                    if (!driver.HasElement(By.XPath(rowXPath.Replace("[INDEX]", (index).ToString()))))
                     {
                         lastRowInCurrentView = ClickGridAndPageDown(driver, grid, lastRowInCurrentView);
                     }
                     else
                     {
-                        gridRow = driver.FindElement(By.XPath
-                        (AppElements.Xpath[AppReference.Grid.Row].Replace("[INDEX]", index.ToString())));
+                        gridRow = driver.FindElement(By.XPath(rowXPath.Replace("[INDEX]", index.ToString())));
                         lastRow = true;
                     }
-                    if (driver.HasElement(By.XPath(AppElements.Xpath[AppReference.Grid.LastRow])))
+
+                    var lastRowXPath = AppElements.Xpath[AppReference.Grid.LastRow];
+                    if (driver.HasElement(By.XPath(lastRowXPath)))
                     {
                         lastRow = true;
                     }
@@ -4673,7 +4678,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 var advancedLookup = driver.WaitUntilAvailable(
                     By.XPath(AppElements.Xpath[AppReference.AdvancedLookup.Container]),
                     2.Seconds());
-               
+
                 if (advancedLookup == null)
                 {
                     SelectLookupAdvancedLookupButton();
@@ -4686,7 +4691,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 advancedLookup
                     .FindElement(By.XPath(AppElements.Xpath[AppReference.AdvancedLookup.ViewSelectorCaret]))
                     .Click();
-                
+
                 driver
                     .WaitUntilAvailable(By.XPath(AppElements.Xpath[AppReference.AdvancedLookup.ViewDropdownList]))
                     .ClickWhenAvailable(

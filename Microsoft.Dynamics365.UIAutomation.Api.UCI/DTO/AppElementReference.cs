@@ -409,11 +409,16 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
             { "Grid_FilterByAll"       , "//*[@id=\"All_link\"]"},
             { "Grid_RowsContainerCheckbox"  ,   "//div[@role='checkbox']" },
             { "Grid_RowsContainer"       , "//div[contains(@role,'grid')]"},
-            { "Grid_Rows"           , "//div[@data-id='grid-container']//div[@data-automationid='ListCell']"},
-            //{ "Grid_Row"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[@row-index=\'[INDEX]\']"},
-            { "Grid_Row"           , "//div[@data-id='entity_control-powerapps_onegrid_control_container']//div[@role='rowgroup']//div[@row-index=\'[INDEX]\']"},
+            { "Grid_Rows"        , "//div[@data-id='grid-container']"},
+            // https://github.com/microsoft/EasyRepro/issues/1317
+            // Grids not working in 9.2(UCI)
+            //{ "Grid_Rows"           , "//div[@data-id='grid-container']//div[@data-automationid='ListCell']"},
+            
+            
+            { "Grid_Row"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[@row-index=\'[INDEX]\']"},
+            //{ "Grid_Row"           , "//div[@data-id='entity_control-powerapps_onegrid_control_container']//div[@role='rowgroup']//div[@row-index=\'[INDEX]\']"},
             //entity_control-powerapps_onegrid_control_container/div[ag-center-cols-container]/
-            { "Grid_LastRow"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[contains(@class, 'ag last-row')]"},
+            { "Grid_LastRow"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[contains(@class, 'ag-row-last')]"},
             { "Grid_Control", "//div[contains(@data-lp-id, 'MscrmControls.Grid.PCFGridControl')]" },
             { "Grid_Columns"           , "//div[contains(@ref,'gridHeader')]"},
             { "Grid_ChartSelector"           , "//span[contains(@id,'ChartSelector')]"},
@@ -474,7 +479,8 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
             { "Entity_SubGrid_LastRow"           , "//div[@ref='centerContainer']//div[@role='rowgroup']//div[contains(@class, 'ag-row-last')]"},
             { "Entity_SubGridTitle", "//div[contains(text(), '[NAME]')]" },
             { "Entity_SubGridContents", "//div[@id=\"dataSetRoot_[NAME]\"]" },
-            { "Entity_SubGridList", "//div[@data-id='[NAME]-pcf_grid_control_container']//div[@data-id='grid-container']//div[@data-automationid='ListCell']" },
+            { "Entity_SubGridList", "//div[@data-id='[NAME]-pcf_grid_control_container']//div[@data-id='grid-container']" },
+            //{ "Entity_SubGridList", "//div[@data-id='[NAME]-pcf_grid_control_container']//div[@data-id='grid-container']//div[@data-automationid='ListCell']" },
             { "Entity_SubGridListCells", ".//div[@class='ag-center-cols-viewport']//div[@role='rowgroup']" },
             { "Entity_SubGridViewPickerButton", ".//span[contains(@id, 'ViewSelector') and contains(@id, 'button')]" },
             { "Entity_SubGridViewPickerFlyout", "//div[contains(@id, 'ViewSelector') and contains(@flyoutroot, 'flyoutRootNode')]" },
