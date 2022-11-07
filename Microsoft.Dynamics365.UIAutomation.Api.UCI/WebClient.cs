@@ -18,6 +18,7 @@ using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
+using System.Web.UI;
 
 namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
 {
@@ -4130,6 +4131,38 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 driver.WaitForTransaction();
 
                 return true;
+            });
+        }
+
+        internal BrowserCommandResult<bool> HeaderValueExists(string controlName)
+        {
+            return Execute(GetOptions($"Get Header field {controlName}"), driver =>
+            {
+                var result = false;
+
+                var keys = new[] {
+                    //AppReference.Entity.Header.Container,
+                    //AppReference.Entity.Header.Flyout,
+                    //AppReference.Entity.Header.FlyoutButton,
+                    AppReference.Entity.Header.LookupFieldContainer,
+                    AppReference.Entity.Header.TextFieldContainer,
+                    AppReference.Entity.Header.OptionSetFieldContainer,
+                    AppReference.Entity.Header.DateTimeFieldContainer,
+                };
+                foreach (var key in keys)
+                {
+                    try
+                    {
+                        var xpathToContainer = AppElements.Xpath[key].Replace("[NAME]", controlName);
+                        if (result = ExecuteInHeaderContainer(driver, xpathToContainer, container => container != null))
+                        {
+                            break;
+                        }
+                    }
+                    catch (NoSuchElementException) { /*ignore*/ }
+                }
+
+                return result;
             });
         }
 

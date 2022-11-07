@@ -23,6 +23,13 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
 
         }
 
+        public Field(string id, string name = null, string label = null)
+        {
+            Id = id;
+            Name = name;
+            Label = label;
+        }
+
 
         internal IWebElement _inputElement { get; set; }
 
@@ -106,9 +113,9 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                     var lookupDescription = lookupRecordList.FindElement(By.TagName("div"));
 
                     if (lookupDescription != null)
-                        return lookupDescription.GetAttribute("innerText").ToLowerInvariant().Contains("readonly", StringComparison.OrdinalIgnoreCase);                   
+                        return lookupDescription.GetAttribute("innerText").ToLowerInvariant().Contains("readonly", StringComparison.OrdinalIgnoreCase);
                     else
-                        return false;                    
+                        return false;
                 }
 
                 return false;
@@ -137,7 +144,8 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
         /// <summary>
         /// Returns if the field is visible.
         /// </summary>
-        public bool IsVisible {
+        public bool IsVisible
+        {
             get
             {
                 return containerElement.Displayed;

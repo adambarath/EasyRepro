@@ -147,6 +147,15 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="controlName"></param>
+        public bool HeaderValueExists(string controlName)
+        {
+            return _client.HeaderValueExists(controlName);
+        }
+
+        /// <summary>
         /// Gets the value of a LookupItem from the header
         /// </summary>
         /// <param name="control">The lookup field name of the lookup.</param>
