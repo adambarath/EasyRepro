@@ -62,6 +62,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
             public static string FilterByAll = "Grid_FilterByAll";
             public static string RowsContainerCheckbox = "Grid_RowsContainerCheckbox";
             public static string RowsContainer = "Grid_RowsContainer";
+            public static string LegacyReadOnlyRows = "Grid_LegacyReadOnly_Rows";
             public static string Rows = "Grid_Rows";
             public static string Row = "Grid_Row";
             public static string LastRow = "Grid_LastRow";
@@ -351,6 +352,13 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
             public static string Container = "Performance_Widget";
             public static string Page = "Performance_WidgetPage";
         }
+    
+        public static class PowerApp
+        {
+            public static string ModelFormContainer = "PowerApp_ModalFormContainer";
+            public static string Control = "PowerApp_Control";
+
+        }
     }
 
     public static class AppElements
@@ -359,6 +367,10 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
         {
             //Application 
             { "App_Shell"    , "//*[@id=\"ApplicationShell\"]"},
+
+            //PowerApp
+            { "PowerApp_ModalFormContainer"       , "//iframe[contains(@src,\'[NAME]\')]"},
+            { "PowerApp_Control"       , "//div[@data-control-name=\'[NAME]\']"},
 
             //Navigation
             { "Nav_AreaButton"       , "//button[@id='areaSwitcherId']"},
@@ -409,16 +421,10 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
             { "Grid_FilterByAll"       , "//*[@id=\"All_link\"]"},
             { "Grid_RowsContainerCheckbox"  ,   "//div[@role='checkbox']" },
             { "Grid_RowsContainer"       , "//div[contains(@role,'grid')]"},
-            { "Grid_Rows"        , "//div[@data-id='grid-container']"},
-            // https://github.com/microsoft/EasyRepro/issues/1317
-            // Grids not working in 9.2(UCI)
-            //{ "Grid_Rows"           , "//div[@data-id='grid-container']//div[@data-automationid='ListCell']"},
-            
-            
-            { "Grid_Row"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[@row-index=\'[INDEX]\']"},
-            //{ "Grid_Row"           , "//div[@data-id='entity_control-powerapps_onegrid_control_container']//div[@role='rowgroup']//div[@row-index=\'[INDEX]\']"},
-            //entity_control-powerapps_onegrid_control_container/div[ag-center-cols-container]/
-            { "Grid_LastRow"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[contains(@class, 'ag-row-last')]"},
+            { "Grid_LegacyReadOnly_Rows"           , "//div[@data-id='grid-container']//div[@class='ag-center-cols-container']//div[@role='row']"},
+            { "Grid_Rows"           , "//div[@data-id='entity_control-powerapps_onegrid_control_container']//div[@class='ag-center-cols-container']//div[@role='row']"},
+            { "Grid_Row"           , "//div[@class='ag-center-cols-container']//div[@row-index=\'[INDEX]\']"},
+            { "Grid_LastRow"           , "//div[@data-id='entity_control-pcf_grid_control_container']//div[@ref='centerContainer']//div[@role='rowgroup']//div[contains(@class, 'ag last-row')]"},
             { "Grid_Control", "//div[contains(@data-lp-id, 'MscrmControls.Grid.PCFGridControl')]" },
             { "Grid_Columns"           , "//div[contains(@ref,'gridHeader')]"},
             { "Grid_ChartSelector"           , "//span[contains(@id,'ChartSelector')]"},
@@ -479,9 +485,8 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
             { "Entity_SubGrid_LastRow"           , "//div[@ref='centerContainer']//div[@role='rowgroup']//div[contains(@class, 'ag-row-last')]"},
             { "Entity_SubGridTitle", "//div[contains(text(), '[NAME]')]" },
             { "Entity_SubGridContents", "//div[@id=\"dataSetRoot_[NAME]\"]" },
-            { "Entity_SubGridList", "//div[@data-id='[NAME]-pcf_grid_control_container']//div[@data-id='grid-container']" },
-            //{ "Entity_SubGridList", "//div[@data-id='[NAME]-pcf_grid_control_container']//div[@data-id='grid-container']//div[@data-automationid='ListCell']" },
-            { "Entity_SubGridListCells", ".//div[@class='ag-center-cols-viewport']//div[@role='rowgroup']" },
+            { "Entity_SubGridList", "//div[@data-id='[NAME]-pcf_grid_control_container']//div[@data-id='grid-container']//div[@data-automationid='ListCell']" },
+            { "Entity_SubGridListCells", ".//div[@class='ag-center-cols-viewport']//div[@role='rowgroup']//div[@row-index]" },
             { "Entity_SubGridViewPickerButton", ".//span[contains(@id, 'ViewSelector') and contains(@id, 'button')]" },
             { "Entity_SubGridViewPickerFlyout", "//div[contains(@id, 'ViewSelector') and contains(@flyoutroot, 'flyoutRootNode')]" },
             { "Entity_SubGridCommandBar", ".//ul[contains(@data-id, 'CommandBar')]" },

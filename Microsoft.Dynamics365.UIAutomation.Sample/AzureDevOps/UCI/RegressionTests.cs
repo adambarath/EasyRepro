@@ -341,14 +341,50 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
                 xrmApp.OnlineLogin.Login(_xrmUri, _username, _password, _mfaSecretKey);
                 telemetry.TrackTrace("Login Completed");
                 TakeScreenshot(client, xrmApp.CommandResults.Last());
-                //xrmApp.Navigation.OpenApp(UCIAppName.Sales);
+                xrmApp.Navigation.OpenApp(UCIAppName.Sales);
 
-                telemetry.TrackTrace("OpenAbout Started");
-                xrmApp.Navigation.OpenAbout();
-                telemetry.TrackTrace("OpenAbout Completed");
+                //telemetry.TrackTrace("OpenAbout Started");
+                //xrmApp.Navigation.OpenAbout();
+                //telemetry.TrackTrace("OpenAbout Completed");
+                //TakeScreenshot(client, xrmApp.CommandResults.Last());
+                //xrmApp.Dialogs.ClickOk();
+
+                telemetry.TrackTrace("Begin Testing Modern Read Only Grid");
+                Trace.WriteLine("Begin Testing Modern Read Only Grid");
+                telemetry.TrackTrace("OpenSubArea Started");
+                xrmApp.Navigation.OpenSubArea("Sales", "Contacts");
+                telemetry.TrackTrace("OpenSubArea Completed");
                 TakeScreenshot(client, xrmApp.CommandResults.Last());
-                xrmApp.Dialogs.ClickOk();
 
+                telemetry.TrackTrace("SwitchView Started");
+                xrmApp.Grid.SwitchView("Active Contacts");
+                telemetry.TrackTrace("SwitchView Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+
+                telemetry.TrackTrace("OpenRecord Started");
+                xrmApp.Grid.OpenRecord(0);
+                telemetry.TrackTrace("OpenRecord Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+                telemetry.TrackTrace("End Testing Modern Read Only Grid");
+                Trace.WriteLine("End Testing Modern Read Only Grid");
+
+
+                telemetry.TrackTrace("GetGridControl Started");
+                var subGridHtml = xrmApp.Entity.SubGrid.GetSubGridControl("contactopportunitiesgrid");
+                WriteSource("SUBGRID_", subGridHtml);
+                telemetry.TrackTrace("GetGridControl Completed");
+
+                telemetry.TrackTrace("GetSubGridItems Started");
+                var getSubGridItems = xrmApp.Entity.SubGrid.GetSubGridItems("contactopportunitiesgrid");
+                telemetry.TrackTrace("GetSubGridItems Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+                Assert.IsTrue(getSubGridItems.Count > 0, "GetSubGridItems returned 0 records.");
+
+                xrmApp.Entity.SubGrid.OpenSubGridRecord("contactopportunitiesgrid", 0);
+
+
+                telemetry.TrackTrace("Begin Testing Modern Read Only Grid Scrolling");
+                Trace.WriteLine("Begin Testing Modern Read Only Grid Scrolling");
                 telemetry.TrackTrace("OpenSubArea Started");
                 xrmApp.Navigation.OpenSubArea("Sales", "Accounts");
                 telemetry.TrackTrace("OpenSubArea Completed");
@@ -359,31 +395,66 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
                 telemetry.TrackTrace("SwitchView Completed");
                 TakeScreenshot(client, xrmApp.CommandResults.Last());
 
-                telemetry.TrackTrace("GetGridControl Started");
-                var gridHtml = xrmApp.Grid.GetGridControl();
-                WriteSource("GRID_",gridHtml);
-                telemetry.TrackTrace("GetGridControl Completed");
+                telemetry.TrackTrace("OpenRecord Started");
+                xrmApp.Grid.OpenRecord(100);
+                telemetry.TrackTrace("OpenRecord Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+                telemetry.TrackTrace("End Testing Modern Read Only Grid Scrolling");
+                Trace.WriteLine("End Testing Modern Read Only Grid Scrolling");
 
-                telemetry.TrackTrace("Search Started");
-                xrmApp.Grid.Search("Contoso");
-                telemetry.TrackTrace("Search Completed");
+                telemetry.TrackTrace("Begin Testing Power Apps Grid Scrolling");
+                telemetry.TrackTrace("OpenSubArea Started");
+                xrmApp.Navigation.OpenSubArea("Sales", "Contacts");
+                telemetry.TrackTrace("OpenSubArea Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+
+                telemetry.TrackTrace("SwitchView Started");
+                xrmApp.Grid.SwitchView("Active Contacts");
+                telemetry.TrackTrace("SwitchView Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+
+                telemetry.TrackTrace("OpenRecord Started");
+                xrmApp.Grid.OpenRecord(100);
+                telemetry.TrackTrace("OpenRecord Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+                telemetry.TrackTrace("End Testing Power Apps Grid Scrolling");
+
+                telemetry.TrackTrace("Begin Testing Power Apps Grid");
+                Trace.WriteLine("Begin Testing Power Apps Grid");
+                telemetry.TrackTrace("OpenSubArea Started");
+                xrmApp.Navigation.OpenSubArea("Sales", "Contacts");
+                telemetry.TrackTrace("OpenSubArea Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+
+                telemetry.TrackTrace("SwitchView Started");
+                xrmApp.Grid.SwitchView("Active Contacts");
+                telemetry.TrackTrace("SwitchView Completed");
                 TakeScreenshot(client, xrmApp.CommandResults.Last());
 
                 telemetry.TrackTrace("OpenRecord Started");
                 xrmApp.Grid.OpenRecord(0);
                 telemetry.TrackTrace("OpenRecord Completed");
                 TakeScreenshot(client, xrmApp.CommandResults.Last());
+                telemetry.TrackTrace("End Testing Power Apps Grid");
+                Trace.WriteLine("End Testing Power Apps Grid");
 
-                telemetry.TrackTrace("GetGridControl Started");
-                var subGridHtml = xrmApp.Entity.SubGrid.GetSubGridControl("Contacts");
-                WriteSource("SUBGRID_", subGridHtml);
-                telemetry.TrackTrace("GetGridControl Completed");
-
-                telemetry.TrackTrace("GetSubGridItems Started");
-                var getSubGridItems = xrmApp.Entity.SubGrid.GetSubGridItems("Contacts");
-                telemetry.TrackTrace("GetSubGridItems Completed");
+                telemetry.TrackTrace("Testing Paging on Power Apps Grid");
+                telemetry.TrackTrace("OpenSubArea Started");
+                xrmApp.Navigation.OpenSubArea("Sales", "Contacts");
+                telemetry.TrackTrace("OpenSubArea Completed");
                 TakeScreenshot(client, xrmApp.CommandResults.Last());
-                Assert.IsTrue(getSubGridItems.Count > 0, "GetSubGridItems returned 0 records.");
+
+                telemetry.TrackTrace("SwitchView Started");
+                xrmApp.Grid.SwitchView("Active Contacts");
+                telemetry.TrackTrace("SwitchView Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+
+                telemetry.TrackTrace("OpenRecord Started");
+                xrmApp.Grid.OpenRecord(100);
+                telemetry.TrackTrace("OpenRecord Completed");
+                TakeScreenshot(client, xrmApp.CommandResults.Last());
+
+
 
                 telemetry.TrackTrace("OpenSubGridRecord Started");
                 xrmApp.Entity.SubGrid.OpenSubGridRecord("Contacts", 30);

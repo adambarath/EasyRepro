@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Resources;
 using System.Security;
 using System.Text.RegularExpressions;
@@ -1528,17 +1529,36 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 return true;
             });
         }
-        private static int ClickGridAndPageDown(IWebDriver driver, IWebElement grid, int lastKnownFloor)
+        private static int ClickGridAndPageDown(IWebDriver driver, IWebElement grid, int lastKnownFloor, Grid.GridType gridType)
         {
-            var actions = new Actions(driver);
-
-            var currentRows = driver.FindElements(By.XPath(AppElements.Xpath[AppReference.Grid.Rows]));
-            var lastFloor = currentRows.Where(x => Convert.ToInt32(x.GetAttribute("row-index")) == lastKnownFloor).First();
-            var topRow = driver.FindElement(By.XPath(AppElements.Xpath[AppReference.Grid.Rows]));
+            Actions actions = new Actions(driver);
+            By rowGroupLocator = null;
+            By topRowLocator = null;
+            switch (gridType)
+            {
+                case Grid.GridType.LegacyReadOnlyGrid:
+                    rowGroupLocator = By.XPath(AppElements.Xpath[AppReference.Grid.LegacyReadOnlyRows]);
+                    topRowLocator = By.XPath(AppElements.Xpath[AppReference.Grid.Rows]);
+                    break;
+                case Grid.GridType.ReadOnlyGrid:
+                    rowGroupLocator = By.XPath(AppElements.Xpath[AppReference.Grid.Rows]);
+                    topRowLocator = By.XPath(AppElements.Xpath[AppReference.Grid.Rows]);
+                    break;
+                case Grid.GridType.PowerAppsGridControl:
+                    rowGroupLocator = By.XPath(AppElements.Xpath[AppReference.Grid.Rows]);
+                    topRowLocator = By.XPath(AppElements.Xpath[AppReference.Grid.Rows]);
+                    break;
+                default:
+                    break;
+            }
+            var CurrentRows = driver.FindElements(rowGroupLocator);
+            var lastFloor = CurrentRows.Where(x => Convert.ToInt32(x.GetAttribute("row-index")) == lastKnownFloor).First();
+            //var topRow = driver.FindElement(topRowLocator);
+            var topRow = CurrentRows.First();
             var firstCell = lastFloor.FindElement(By.XPath("//div[@aria-colindex='1']"));
             lastFloor.Click();
             actions.SendKeys(OpenQA.Selenium.Keys.PageDown).Perform();
-            return Convert.ToInt32(driver.FindElements(By.XPath(AppElements.Xpath[AppReference.Grid.Rows])).Last().GetAttribute("row-index"));
+            return Convert.ToInt32(driver.FindElements(rowGroupLocator).Last().GetAttribute("row-index"));
         }
 
         internal BrowserCommandResult<bool> OpenRecord(int index, int thinkTime = Constants.DefaultThinkTime, bool checkRecord = false)
@@ -1549,13 +1569,25 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 var grid = driver.FindElement(By.XPath(AppElements.Xpath[AppReference.Grid.PcfContainer]));
                 bool lastRow = false;
                 IWebElement gridRow = null;
+                Grid.GridType gridType = Grid.GridType.PowerAppsGridControl;
                 int lastRowInCurrentView = 0;
                 while (!lastRow)
                 {
-                    var rowXPath = AppElements.Xpath[AppReference.Grid.Row];
-                    if (!driver.HasElement(By.XPath(rowXPath.Replace("[INDEX]", (index).ToString()))))
+                    //determine which grid
+                    if (driver.HasElement(By.XPath(AppElements.Xpath[AppReference.Grid.Rows]))){
+                        gridType = Grid.GridType.PowerAppsGridControl;
+                        Trace.WriteLine("Found Power Apps Grid.");
+                    }
+                    else if (driver.HasElement(By.XPath(AppElements.Xpath[AppReference.Grid.LegacyReadOnlyRows])))
                     {
-                        lastRowInCurrentView = ClickGridAndPageDown(driver, grid, lastRowInCurrentView);
+                        gridType = Grid.GridType.LegacyReadOnlyGrid;
+                        Trace.WriteLine("Found Legacy Read Only Grid.");
+                    }
+
+
+                    if (!driver.HasElement(By.XPath(AppElements.Xpath[AppReference.Grid.Row].Replace("[INDEX]", (index).ToString()))))
+                    {
+                        lastRowInCurrentView = ClickGridAndPageDown(driver, grid, lastRowInCurrentView, gridType);
                     }
                     else
                     {
@@ -1570,8 +1602,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                     }
                 }
                 if (gridRow == null) throw new NotFoundException($"Grid Row {index} not found.");
-                var xpathToGrid = By.XPath("//div[contains(@data-lp-id,'MscrmControls.Grid')]");
-                var gridContainer = driver.FindElement(By.XPath("//div[contains(@data-lp-id,'MscrmControls.Grid')]"));
+                var xpathToGrid = By.XPath("//div[contains(@data-id,'DataSetHostContainer')]");
                 IWebElement control = driver.WaitUntilAvailable(xpathToGrid);
 
                 Func<Actions, Actions> action;
@@ -1579,19 +1610,31 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                     action = e => e.Click();
                 else
                     action = e => e.DoubleClick();
-
                 var xpathToCell = By.XPath(AppElements.Xpath[AppReference.Grid.Row].Replace("[INDEX]", index.ToString()));
                 control.WaitUntilClickable(xpathToCell,
                     cell =>
                     {
                         var emptyDiv = cell.FindElement(By.TagName("div"));
-                        //driver.Perform(action, cell, cell.LeftTo(emptyDiv));
-                        driver.Perform(action, emptyDiv, null);
+                        switch (gridType)
+                        {
+                            case Grid.GridType.LegacyReadOnlyGrid:
+                                driver.Perform(action, emptyDiv, null);
+                                break;
+                            case Grid.GridType.ReadOnlyGrid:
+                                driver.Perform(action, emptyDiv, null);
+                                break;
+                            case Grid.GridType.PowerAppsGridControl:
+                                cell.FindElement(By.XPath("//a[contains(@aria-label,'Read only')]")).Click();
+                                break;
+                            default: throw new InvalidSelectorException("Did not find Read Only or Power Apps Grid.");
+                        }
+                        Trace.WriteLine("Clicked record.");
                     },
                     $"An error occur trying to open the record at position {index}"
-                    );
+                );
 
                 driver.WaitForTransaction();
+                Trace.WriteLine("Click Record transaction complete.");
                 return true;
             });
         }
@@ -2316,11 +2359,11 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                 if (subGrid == null)
                     throw new NotFoundException($"Unable to locate subgrid contents for {subgridName} subgrid.");
                 // Check if ReadOnlyGrid was found
-                if (subGrid.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridList].Replace("[NAME]", subgridName)), out subGridRecordList))
+                if (subGrid.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridListCells].Replace("[NAME]", subgridName)), out subGridRecordList))
                 {
 
                     // Locate record list
-                    var foundRecords = subGrid.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridList].Replace("[NAME]", subgridName)), out subGridRecordList);
+                    var foundRecords = subGrid.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridListCells].Replace("[NAME]", subgridName)), out subGridRecordList);
 
                     if (foundRecords)
                     {
@@ -2496,12 +2539,12 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
 
                 // Find list of SubGrid records
                 IWebElement subGridRecordList = null;
-                var foundGrid = subGrid.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridList].Replace("[NAME]", subgridName)), out subGridRecordList);
+                var foundGrid = subGrid.TryFindElement(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridListCells].Replace("[NAME]", subgridName)), out subGridRecordList);
 
                 // Read Only Grid Found
                 if (subGridRecordList != null && foundGrid)
                 {
-                    var subGridRecordRows = subGrid.FindElements(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridList].Replace("[NAME]", subgridName)));
+                    var subGridRecordRows = subGrid.FindElements(By.XPath(AppElements.Xpath[AppReference.Entity.SubGridListCells].Replace("[NAME]", subgridName)));
                     if (subGridRecordRows == null)
                         throw new NoSuchElementException($"No records were found for subgrid {subgridName}");
                     Actions actions = new Actions(driver);
@@ -5765,6 +5808,61 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
 
         #endregion
 
+        #region PowerApp
+        private bool _inPowerApps = false;
+        internal IWebElement LocatePowerApp(IWebDriver driver, string appId)
+        {
+            IWebElement powerApp = null;
+            Trace.WriteLine(String.Format("Locating {0} App", appId));
+            if (driver.HasElement(By.XPath(AppElements.Xpath[AppReference.PowerApp.ModelFormContainer].Replace("[NAME]", appId))))
+            {
+                powerApp = driver.FindElement(By.XPath(AppElements.Xpath[AppReference.PowerApp.ModelFormContainer].Replace("[NAME]", appId)));
+                driver.SwitchTo().Frame(powerApp);
+                powerApp = driver.FindElement(By.XPath("//iframe[@class='publishedAppIframe']"));
+                driver.SwitchTo().Frame(powerApp);
+                _inPowerApps = true;
+            }
+            else
+            {
+                throw new NotFoundException(String.Format("PowerApp with Id {0} not found.", appId));
+            }
+            return powerApp;
+        }
+        public BrowserCommandResult<bool> PowerAppSendCommand(string appId, string command)
+        {
+            return this.Execute(GetOptions("PowerApp Send Command"), driver =>
+            {
+                LocatePowerApp(driver, appId);
+                return true;
+            });
+        }
+        public BrowserCommandResult<bool> PowerAppSelect(string appId, string control)
+        {
+
+            return this.Execute(GetOptions("PowerApp Select"), driver =>
+            {
+                if(!_inPowerApps) LocatePowerApp(driver, appId);
+                if (driver.HasElement(By.XPath(AppElements.Xpath[AppReference.PowerApp.Control].Replace("[NAME]", control))))
+                {
+                    driver.FindElement(By.XPath(AppElements.Xpath[AppReference.PowerApp.Control].Replace("[NAME]", control))).Click();
+                }
+                else
+                {
+                    throw new NotFoundException(String.Format("Control {0} not found in Power App {1}", control, appId));
+                }
+                return true;
+            });
+        }
+        public BrowserCommandResult<bool> PowerAppSetProperty(string appId, string control, string value)
+        {
+
+            return this.Execute(GetOptions("PowerApp Set Property"), driver =>
+            {
+                LocatePowerApp(driver, appId);
+                return true;
+            });
+        }
+        #endregion PowerApp
         internal void ThinkTime(int milliseconds)
         {
             Browser.ThinkTime(milliseconds);
